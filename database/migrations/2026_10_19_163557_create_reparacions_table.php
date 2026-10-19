@@ -6,22 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('reparacions', function (Blueprint $table) {
+        Schema::create('reparaciones', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('diagnostico_id')
+                ->constrained('diagnosticos');
+
+            $table->text('descripcion');
+            $table->decimal('costo_mano_obra', 10, 2)->default(0);
+
+            $table->enum('estado', [
+                'pendiente',
+                'en_proceso',
+                'finalizada'
+            ])->default('pendiente');
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('reparacions');
+        Schema::dropIfExists('reparaciones');
     }
 };
+

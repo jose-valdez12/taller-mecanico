@@ -6,20 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('solicitud_repuestos', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('reparacion_id')
+                ->constrained('reparaciones');
+
+            $table->foreignId('mecanico_id')
+                ->constrained('users');
+
+            $table->enum('estado', [
+                'pendiente',
+                'aprobada',
+                'rechazada',
+                'despachada'
+            ])->default('pendiente');
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('solicitud_repuestos');
