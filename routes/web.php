@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculosController;
+use App\Http\Controllers\IngresoController;
 
 
 // Página principal
@@ -73,6 +74,22 @@ Route::middleware('auth')->group(function () {
 
             Route::resource('vehiculos', VehiculoController::class)
                 ->except(['show', 'destroy']);
+        });
 
+        //Ingreso y salidas
+         Route::middleware('role:administrador,recepcion')
+        ->group(function () {
+
+            Route::get('/ingresos', [IngresoController::class, 'index'])
+                ->name('ingresos.index');
+
+            Route::get('/ingresos/create', [IngresoController::class, 'create'])
+                ->name('ingresos.create');
+
+            Route::post('/ingresos', [IngresoController::class, 'store'])
+                ->name('ingresos.store');
+
+            Route::patch('/ingresos/{ingreso}/salida', [IngresoController::class, 'salida'])
+                ->name('ingresos.salida');
         });
 });

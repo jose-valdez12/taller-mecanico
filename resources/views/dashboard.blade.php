@@ -101,6 +101,11 @@
                          class="btn btn-primary">
                          Gestionar vehículos
                         </a>
+
+                        <a href="{{ route('ingresos.index') }}"
+                           class="btn btn-primary">
+                           Ingresos y Salidas
+                        </a>
                 </div>
             </div>
         </div>
