@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ClienteController;
 
 
 // Página principal
@@ -51,8 +52,16 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->middleware('role:administrador,bodeguero')->name('bodega');
 
-    Route::Middleware('role:administrador')->group(function(){
+    Route::middleware('role:administrador')->group(function(){
           Route::resource('usuarios', UsuarioController::class)
         ->except(['show']);
+    });
+
+    Route::middleware('role:administrador,recepcion')
+    ->group(function () {
+
+        Route::resource('clientes', ClienteController::class)
+            ->except(['show', 'destroy']);
+
     });
 });

@@ -91,6 +91,11 @@
                        class="btn btn-primary">
                         Gestionar usuarios
                     </a>
+
+                    <a href="{{ route('clientes.index') }}"
+                         class="btn btn-primary">
+                        Gestionar clientes
+                    </a>
                 </div>
             </div>
         </div>
