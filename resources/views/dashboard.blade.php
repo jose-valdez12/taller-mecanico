@@ -149,6 +149,10 @@
                          class="btn btn-primary">
                          Gestionar Reparaciones
                      </a>
+                       <a href="{{ route('solicitudes.index') }}"
+                         class="btn btn-primary">
+                         Solicitar Repuestos
+                       </a>
                 </div>
             </div>
         </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\VehiculosController;
 use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\ReparacionesController;
+use App\Http\Controllers\SolicitudRepuestoController;
 
 
 // Página principal
@@ -132,5 +133,23 @@ Route::middleware('auth')->group(function () {
             Route::patch('/reparaciones/{reparacion}/estado',
                 [ReparacionController::class, 'actualizarEstado'])
                 ->name('reparaciones.estado');
+        });
+
+        //Solicitud de repuestos
+          Route::middleware('role:administrador,mecanico')
+        ->group(function () {
+
+            Route::get('/solicitudes',
+                [SolicitudRepuestoController::class, 'index'])
+                ->name('solicitudes.index');
+
+            Route::get('/solicitudes/create',
+                [SolicitudRepuestoController::class, 'create'])
+                ->name('solicitudes.create');
+
+            Route::post('/solicitudes',
+                [SolicitudRepuestoController::class, 'store'])
+                ->name('solicitudes.store');
+
         });
 });
