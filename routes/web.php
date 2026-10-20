@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UsuarioController;
 
 
 // Página principal
@@ -49,4 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/bodega', function () {
         return view('dashboard');
     })->middleware('role:administrador,bodeguero')->name('bodega');
+
+    Route::Middleware('role:administrador')->group(function(){
+          Route::resource('usuarios', UsuarioController::class)
+        ->except(['show']);
+    });
 });

@@ -75,6 +75,7 @@
 
     <div class="row g-3">
 
+        <!-- ADMINISTRADOR -->
         @if(auth()->user()->rol === 'administrador')
 
         <div class="col-md-6">
@@ -85,12 +86,18 @@
                         Gestión de usuarios, roles
                         y permisos del sistema.
                     </p>
+
+                    <a href="{{ route('usuarios.index') }}"
+                       class="btn btn-primary">
+                        Gestionar usuarios
+                    </a>
                 </div>
             </div>
         </div>
 
         @endif
 
+        <!-- RECEPCIÓN -->
         @if(in_array(auth()->user()->rol, ['administrador', 'recepcion']))
 
         <div class="col-md-6">
@@ -107,6 +114,7 @@
 
         @endif
 
+        <!-- MECÁNICO -->
         @if(in_array(auth()->user()->rol, ['administrador', 'mecanico']))
 
         <div class="col-md-6">
@@ -123,6 +131,7 @@
 
         @endif
 
+        <!-- BODEGUERO -->
         @if(in_array(auth()->user()->rol, ['administrador', 'bodeguero']))
 
         <div class="col-md-6">

@@ -28,4 +28,18 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+public function ingresosAsignados()
+{
+    return $this->hasMany(Ingreso::class, 'mecanico_id');
+}
+
+public function solicitudesRepuestos()
+{
+    return $this->hasMany(
+        SolicitudRepuesto::class,
+        'mecanico_id'
+    );
+}
 }
