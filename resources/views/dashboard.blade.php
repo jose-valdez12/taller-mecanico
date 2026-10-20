@@ -170,6 +170,15 @@
                         Inventario, existencias
                         y despacho de repuestos.
                     </p>
+                       <a href="{{ route('repuestos.index') }}"
+                          class="btn btn-primary">
+                          Gestionar Inventario
+                        </a>
+
+                        <a href="{{ route('bodega.index') }}"
+                           class="btn btn-primary">
+                           Solicitudes y Despachos
+                       </a>
                 </div>
             </div>
         </div>

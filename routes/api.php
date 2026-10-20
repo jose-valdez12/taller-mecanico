@@ -1,7 +1,10 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ExistenciaController;
 
-// Aquí configuraremos posteriormente
-// los endpoints de la API REST de bodega.
+Route::middleware(['web', 'auth', 'role:administrador,bodeguero'])
+    ->get('/repuestos/{repuesto}/existencias',
+        [ExistenciaController::class, 'consultar'])
+    ->name('api.repuestos.existencias');
+

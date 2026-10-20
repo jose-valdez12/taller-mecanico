@@ -9,6 +9,8 @@ use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\ReparacionesController;
 use App\Http\Controllers\SolicitudRepuestoController;
+use App\Http\Controllers\RepuestoController;
+use App\Http\Controllers\BodegaController;
 
 
 // Página principal
@@ -151,5 +153,25 @@ Route::middleware('auth')->group(function () {
                 [SolicitudRepuestoController::class, 'store'])
                 ->name('solicitudes.store');
 
+        });
+
+        //Bodega
+        Route::middleware('role:administrador,bodeguero')
+        ->group(function () {
+
+            Route::resource('repuestos', RepuestoController::class)
+                ->except(['show', 'destroy']);
+
+            Route::get('/bodega/solicitudes',
+                [BodegaController::class, 'index'])
+                ->name('bodega.index');
+
+            Route::patch('/bodega/solicitudes/{solicitud}/resolver',
+                [BodegaController::class, 'resolver'])
+                ->name('bodega.resolver');
+
+            Route::patch('/bodega/solicitudes/{solicitud}/despachar',
+                [BodegaController::class, 'despachar'])
+                ->name('bodega.despachar');
         });
 });
