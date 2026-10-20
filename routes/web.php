@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClienteController;
-use App\Http\Controllers\VehiculosController;
+use App\Http\Controllers\VehiculoController;
 use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\DiagnosticoController;
-use App\Http\Controllers\ReparacionesController;
+use App\Http\Controllers\ReparacionController;
 use App\Http\Controllers\SolicitudRepuestoController;
 use App\Http\Controllers\RepuestoController;
 use App\Http\Controllers\BodegaController;
@@ -18,7 +18,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Rutas para usuarios no autenticados
+// Inicio de sesión
 Route::middleware('guest')->group(function () {
 
     Route::get('/login', [AuthController::class, 'mostrarLogin'])
@@ -39,160 +39,149 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
 
-    // Administrador
+    // Panel del administrador
     Route::get('/administrador', function () {
         return view('dashboard');
-    })->middleware('role:administrador')->name('administrador');
+    })->middleware('role:administrador')
+      ->name('administrador');
 
-    // Recepción
+    // Panel de recepción
     Route::get('/recepcion', function () {
         return view('dashboard');
-    })->middleware('role:administrador,recepcion')->name('recepcion');
+    })->middleware('role:administrador,recepcion')
+      ->name('recepcion');
 
-    // Mecánico
+    // Panel del mecánico
     Route::get('/mecanico', function () {
         return view('dashboard');
-    })->middleware('role:administrador,mecanico')->name('mecanico');
+    })->middleware('role:administrador,mecanico')
+      ->name('mecanico');
 
-    // Bodeguero
+    // Panel del bodeguero
     Route::get('/bodega', function () {
         return view('dashboard');
-    })->middleware('role:administrador,bodeguero')->name('bodega');
+    })->middleware('role:administrador,bodeguero')
+      ->name('bodega');
 
-    Route::middleware('role:administrador')->group(function(){
-          Route::resource('usuarios', UsuarioController::class)
-        ->except(['show']);
+    // =====================================
+    // ADMINISTRADOR
+    // =====================================
+    Route::middleware('role:administrador')->group(function () {
+
+        Route::resource('usuarios', UsuarioController::class)
+            ->except(['show']);
+
     });
 
-    //Roles
-    Route::middleware('role:administrador,recepcion')
-    ->group(function () {
+    // =====================================
+    // RECEPCIÓN
+    // =====================================
+    Route::middleware('role:administrador,recepcion')->group(function () {
 
+        // Clientes
         Route::resource('clientes', ClienteController::class)
             ->except(['show', 'destroy']);
 
+        // Vehículos
+        Route::resource('vehiculos', VehiculoController::class)
+            ->except(['show', 'destroy']);
+
+        // Ingresos y salidas
+        Route::get('/ingresos', [IngresoController::class, 'index'])
+            ->name('ingresos.index');
+
+        Route::get('/ingresos/create', [IngresoController::class, 'create'])
+            ->name('ingresos.create');
+
+        Route::post('/ingresos', [IngresoController::class, 'store'])
+            ->name('ingresos.store');
+
+        Route::patch('/ingresos/{ingreso}/salida', [IngresoController::class, 'salida'])
+            ->name('ingresos.salida');
+
     });
 
-//vehiculos
-      Route::middleware('role:administrador,recepcion')
-        ->group(function () {
+    // =====================================
+    // MECÁNICO
+    // =====================================
+    Route::middleware('role:administrador,mecanico')->group(function () {
 
-            Route::resource('vehiculos', VehiculoController::class)
-                ->except(['show', 'destroy']);
-        });
+        // Diagnósticos
+        Route::get('/diagnosticos', [DiagnosticoController::class, 'index'])
+            ->name('diagnosticos.index');
 
-        //Ingreso y salidas
-         Route::middleware('role:administrador,recepcion')
-        ->group(function () {
+        Route::get('/diagnosticos/create', [DiagnosticoController::class, 'create'])
+            ->name('diagnosticos.create');
 
-            Route::get('/ingresos', [IngresoController::class, 'index'])
-                ->name('ingresos.index');
+        Route::post('/diagnosticos', [DiagnosticoController::class, 'store'])
+            ->name('diagnosticos.store');
 
-            Route::get('/ingresos/create', [IngresoController::class, 'create'])
-                ->name('ingresos.create');
+        // Reparaciones
+        Route::get('/reparaciones', [ReparacionController::class, 'index'])
+            ->name('reparaciones.index');
 
-            Route::post('/ingresos', [IngresoController::class, 'store'])
-                ->name('ingresos.store');
+        Route::get('/reparaciones/create', [ReparacionController::class, 'create'])
+            ->name('reparaciones.create');
 
-            Route::patch('/ingresos/{ingreso}/salida', [IngresoController::class, 'salida'])
-                ->name('ingresos.salida');
-        });
+        Route::post('/reparaciones', [ReparacionController::class, 'store'])
+            ->name('reparaciones.store');
 
-        //Diagnostico administrador y mecanico.
-         Route::middleware('role:administrador,mecanico')
-        ->group(function () {
+        Route::patch('/reparaciones/{reparacion}/estado',
+            [ReparacionController::class, 'actualizarEstado'])
+            ->name('reparaciones.estado');
 
-            Route::get('/diagnosticos',
-                [DiagnosticoController::class, 'index'])
-                ->name('diagnosticos.index');
+        // Solicitudes de repuestos
+        Route::get('/solicitudes', [SolicitudRepuestoController::class, 'index'])
+            ->name('solicitudes.index');
 
-            Route::get('/diagnosticos/create',
-                [DiagnosticoController::class, 'create'])
-                ->name('diagnosticos.create');
+        Route::get('/solicitudes/create', [SolicitudRepuestoController::class, 'create'])
+            ->name('solicitudes.create');
 
-            Route::post('/diagnosticos',
-                [DiagnosticoController::class, 'store'])
-                ->name('diagnosticos.store');
+        Route::post('/solicitudes', [SolicitudRepuestoController::class, 'store'])
+            ->name('solicitudes.store');
 
-        });
+    });
 
-        //Reparaciones
-        Route::middleware('role:administrador,mecanico')
-        ->group(function () {
+    // =====================================
+    // BODEGUERO
+    // =====================================
+    Route::middleware('role:administrador,bodeguero')->group(function () {
 
-            Route::get('/reparaciones',
-                [ReparacionController::class, 'index'])
-                ->name('reparaciones.index');
+        // Inventario
+        Route::resource('repuestos', RepuestoController::class)
+            ->except(['show', 'destroy']);
 
-            Route::get('/reparaciones/create',
-                [ReparacionController::class, 'create'])
-                ->name('reparaciones.create');
+        // Solicitudes de Bodega
+        Route::get('/bodega/solicitudes', [BodegaController::class, 'index'])
+            ->name('bodega.index');
 
-            Route::post('/reparaciones',
-                [ReparacionController::class, 'store'])
-                ->name('reparaciones.store');
+        Route::patch('/bodega/solicitudes/{solicitud}/resolver',
+            [BodegaController::class, 'resolver'])
+            ->name('bodega.resolver');
 
-            Route::patch('/reparaciones/{reparacion}/estado',
-                [ReparacionController::class, 'actualizarEstado'])
-                ->name('reparaciones.estado');
-        });
+        Route::patch('/bodega/solicitudes/{solicitud}/despachar',
+            [BodegaController::class, 'despachar'])
+            ->name('bodega.despachar');
 
-        //Solicitud de repuestos
-          Route::middleware('role:administrador,mecanico')
-        ->group(function () {
+    });
 
-            Route::get('/solicitudes',
-                [SolicitudRepuestoController::class, 'index'])
-                ->name('solicitudes.index');
+    // =====================================
+    // FACTURACIÓN
+    // =====================================
+    Route::middleware('role:administrador,recepcion')->group(function () {
 
-            Route::get('/solicitudes/create',
-                [SolicitudRepuestoController::class, 'create'])
-                ->name('solicitudes.create');
+        Route::get('/facturas', [FacturaController::class, 'index'])
+            ->name('facturas.index');
 
-            Route::post('/solicitudes',
-                [SolicitudRepuestoController::class, 'store'])
-                ->name('solicitudes.store');
+        Route::get('/facturas/create', [FacturaController::class, 'create'])
+            ->name('facturas.create');
 
-        });
+        Route::post('/facturas', [FacturaController::class, 'store'])
+            ->name('facturas.store');
 
-        //Bodega
-        Route::middleware('role:administrador,bodeguero')
-        ->group(function () {
+        Route::get('/facturas/{factura}', [FacturaController::class, 'show'])
+            ->name('facturas.show');
 
-            Route::resource('repuestos', RepuestoController::class)
-                ->except(['show', 'destroy']);
+    });
 
-            Route::get('/bodega/solicitudes',
-                [BodegaController::class, 'index'])
-                ->name('bodega.index');
-
-            Route::patch('/bodega/solicitudes/{solicitud}/resolver',
-                [BodegaController::class, 'resolver'])
-                ->name('bodega.resolver');
-
-            Route::patch('/bodega/solicitudes/{solicitud}/despachar',
-                [BodegaController::class, 'despachar'])
-                ->name('bodega.despachar');
-        });
-
-        //Factura
-           Route::middleware('role:administrador,recepcion')
-        ->group(function () {
-
-            Route::get('/facturas',
-                [FacturaController::class, 'index'])
-                ->name('facturas.index');
-
-            Route::get('/facturas/create',
-                [FacturaController::class, 'create'])
-                ->name('facturas.create');
-
-            Route::post('/facturas',
-                [FacturaController::class, 'store'])
-                ->name('facturas.store');
-
-            Route::get('/facturas/{factura}',
-                [FacturaController::class, 'show'])
-                ->name('facturas.show');
-        });
 });
