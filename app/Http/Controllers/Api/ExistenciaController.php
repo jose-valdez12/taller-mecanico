@@ -4,30 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Repuesto;
+use App\Services\ExistenciaService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ExistenciaController extends Controller
 {
-    public function consultar(Repuesto $repuesto): JsonResponse
-    {
-        $cantidad = filter_var(
-            request()->query('cantidad', 1),
-            FILTER_VALIDATE_INT
-        );
-
-        if ($cantidad === false || $cantidad < 1) {
-            return response()->json([
-                'mensaje' => 'La cantidad debe ser un entero positivo.'
-            ], 422);
-        }
-
-        return response()->json([
-            'repuesto_id' => $repuesto->id,
-            'codigo' => $repuesto->codigo,
-            'nombre' => $repuesto->nombre,
-            'stock' => $repuesto->stock,
-            'cantidad_solicitada' => $cantidad,
-            'disponible' => $repuesto->stock >= $cantidad,
+    public function consultar(
+        Request $request,
+        Repuesto $repuesto,
+        ExistenciaService $existencias
+    ): JsonResponse {
+        $datos = $request->validate([
+            'cantidad' => 'required|integer|min:1'
         ]);
+
+        return response()->json(
+            $existencias->consultar(
+                $repuesto,
+                (int) $datos['cantidad']
+            )
+        );
     }
 }
