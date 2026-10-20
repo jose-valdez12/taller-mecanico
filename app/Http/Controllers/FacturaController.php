@@ -37,7 +37,7 @@ class FacturaController extends Controller
         return view('facturas.create', compact('reparaciones'));
     }
 
-    // Calcular costo de repuestos despachados
+    // Calcular el costo de los repuestos despachados
     private function totalRepuestos(Reparacion $reparacion)
     {
         return DetalleSolicitud::whereHas(
@@ -47,9 +47,8 @@ class FacturaController extends Controller
                       ->where('estado', 'despachada');
             }
         )
-        ->join('repuestos', 'detalle_solicitudes.repuesto_id', '=', 'repuestos.id')
         ->selectRaw(
-            'COALESCE(SUM(detalle_solicitudes.cantidad * repuestos.precio), 0) as total'
+            'COALESCE(SUM(cantidad * precio_unitario), 0) as total'
         )
         ->value('total');
     }
@@ -69,6 +68,7 @@ class FacturaController extends Controller
             ->lockForUpdate()
             ->firstOrFail();
 
+            // Solo facturar reparaciones finalizadas
             if ($reparacion->estado !== 'finalizada') {
                 throw ValidationException::withMessages([
                     'reparacion_id' =>
@@ -76,6 +76,7 @@ class FacturaController extends Controller
                 ]);
             }
 
+            // Evitar facturas duplicadas
             if ($reparacion->factura()->exists()) {
                 throw ValidationException::withMessages([
                     'reparacion_id' =>
@@ -83,14 +84,36 @@ class FacturaController extends Controller
                 ]);
             }
 
+            // Verificar que todos los repuestos
+            // despachados tengan un precio registrado
+            $sinPrecio = DetalleSolicitud::whereHas(
+                'solicitud',
+                function ($query) use ($reparacion) {
+                    $query->where('reparacion_id', $reparacion->id)
+                          ->where('estado', 'despachada');
+                }
+            )
+            ->whereNull('precio_unitario')
+            ->exists();
+
+            if ($sinPrecio) {
+                throw ValidationException::withMessages([
+                    'reparacion_id' =>
+                        'Existen repuestos despachados sin precio registrado.'
+                ]);
+            }
+
+            // Calcular costo total de repuestos
             $totalRepuestos = $this->totalRepuestos($reparacion);
 
+            // Sumar mano de obra y repuestos
             $total = round(
                 (float) $reparacion->costo_mano_obra +
                 (float) $totalRepuestos,
                 2
             );
 
+            // Generar factura
             Factura::create([
                 'reparacion_id' => $reparacion->id,
                 'total' => $total,
@@ -109,13 +132,20 @@ class FacturaController extends Controller
             'reparacion.diagnostico.ingreso.vehiculo.cliente'
         ]);
 
+        // Obtener repuestos con sus precios históricos
         $repuestos = DetalleSolicitud::with('repuesto')
             ->whereHas('solicitud', function ($query) use ($factura) {
-                $query->where('reparacion_id', $factura->reparacion_id)
-                      ->where('estado', 'despachada');
+                $query->where(
+                    'reparacion_id',
+                    $factura->reparacion_id
+                )
+                ->where('estado', 'despachada');
             })
             ->get();
 
-        return view('facturas.show', compact('factura', 'repuestos'));
+        return view(
+            'facturas.show',
+            compact('factura', 'repuestos')
+        );
     }
 }
