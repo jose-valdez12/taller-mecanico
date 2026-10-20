@@ -13,9 +13,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // Reconocer HTTPS detrás del proxy de Railway
+        $middleware->trustProxies(at: '*');
+
+        // Middleware para los roles del taller
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
