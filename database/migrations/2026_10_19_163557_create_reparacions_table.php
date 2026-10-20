@@ -11,12 +11,19 @@ return new class extends Migration
         Schema::create('reparaciones', function (Blueprint $table) {
             $table->id();
 
+            // Relación con el diagnóstico
             $table->foreignId('diagnostico_id')
+                ->unique()
                 ->constrained('diagnosticos');
 
+            // Información de la reparación
             $table->text('descripcion');
-            $table->decimal('costo_mano_obra', 10, 2)->default(0);
 
+            // Costo de mano de obra
+            $table->decimal('costo_mano_obra', 10, 2)
+                ->default(0);
+
+            // Estado de la reparación
             $table->enum('estado', [
                 'pendiente',
                 'en_proceso',
@@ -32,4 +39,3 @@ return new class extends Migration
         Schema::dropIfExists('reparaciones');
     }
 };
-

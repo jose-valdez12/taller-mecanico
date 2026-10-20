@@ -11,9 +11,11 @@ return new class extends Migration
         Schema::create('vehiculos', function (Blueprint $table) {
             $table->id();
 
+            // Relación con el cliente propietario
             $table->foreignId('cliente_id')
                 ->constrained('clientes');
 
+            // Información del vehículo
             $table->string('placa')->unique();
             $table->string('marca');
             $table->string('modelo');

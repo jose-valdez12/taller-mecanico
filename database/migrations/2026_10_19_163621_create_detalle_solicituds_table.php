@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('detalle_solicitudes', function (Blueprint $table) {
             $table->id();
 
-            // Relación con la solicitud de repuestos
+            // Relación con la solicitud
             $table->foreignId('solicitud_repuesto_id')
                 ->constrained('solicitud_repuestos');
 
@@ -20,9 +20,9 @@ return new class extends Migration
                 ->constrained('repuestos');
 
             // Cantidad solicitada
-            $table->integer('cantidad');
+            $table->unsignedInteger('cantidad');
 
-            // Precio del repuesto al momento del despacho
+            // Precio al momento del despacho
             $table->decimal('precio_unitario', 10, 2)
                 ->nullable();
 

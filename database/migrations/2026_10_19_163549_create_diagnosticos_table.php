@@ -11,10 +11,14 @@ return new class extends Migration
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
 
+            // Relación con el ingreso del vehículo
             $table->foreignId('ingreso_id')
                 ->constrained('ingresos');
 
+            // Fallas encontradas
             $table->text('descripcion_fallas');
+
+            // Reparaciones necesarias
             $table->text('reparaciones_necesarias');
 
             $table->timestamps();

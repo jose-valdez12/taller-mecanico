@@ -10,10 +10,17 @@ return new class extends Migration
     {
         Schema::create('repuestos', function (Blueprint $table) {
             $table->id();
+
+            // Información del repuesto
             $table->string('nombre');
             $table->string('codigo')->unique();
-            $table->integer('stock')->default(0);
+
+            // Existencias disponibles
+            $table->unsignedInteger('stock')->default(0);
+
+            // Precio unitario
             $table->decimal('precio', 10, 2);
+
             $table->timestamps();
         });
     }
