@@ -7,6 +7,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculosController;
 use App\Http\Controllers\IngresoController;
 use App\Http\Controllers\DiagnosticoController;
+use App\Http\Controllers\ReparacionesController;
 
 
 // Página principal
@@ -110,5 +111,26 @@ Route::middleware('auth')->group(function () {
                 [DiagnosticoController::class, 'store'])
                 ->name('diagnosticos.store');
 
+        });
+
+        //Reparaciones
+        Route::middleware('role:administrador,mecanico')
+        ->group(function () {
+
+            Route::get('/reparaciones',
+                [ReparacionController::class, 'index'])
+                ->name('reparaciones.index');
+
+            Route::get('/reparaciones/create',
+                [ReparacionController::class, 'create'])
+                ->name('reparaciones.create');
+
+            Route::post('/reparaciones',
+                [ReparacionController::class, 'store'])
+                ->name('reparaciones.store');
+
+            Route::patch('/reparaciones/{reparacion}/estado',
+                [ReparacionController::class, 'actualizarEstado'])
+                ->name('reparaciones.estado');
         });
 });

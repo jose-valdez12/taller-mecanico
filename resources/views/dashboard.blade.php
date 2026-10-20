@@ -144,6 +144,11 @@
                          class="btn btn-primary">
                         Gestionar Diagnósticos
                     </a>
+
+                     <a href="{{ route('reparaciones.index') }}"
+                         class="btn btn-primary">
+                         Gestionar Reparaciones
+                     </a>
                 </div>
             </div>
         </div>
