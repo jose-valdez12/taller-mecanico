@@ -14,13 +14,15 @@ class Diagnostico extends Model
         'reparaciones_necesarias'
     ];
 
+    // Ingreso al que pertenece el diagnóstico
     public function ingreso()
     {
         return $this->belongsTo(Ingreso::class);
     }
 
-    public function reparaciones()
+    // Reparación asociada al diagnóstico
+    public function reparacion()
     {
-        return $this->hasMany(Reparacion::class);
+        return $this->hasOne(Reparacion::class);
     }
 }

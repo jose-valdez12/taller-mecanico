@@ -25,18 +25,21 @@ class Ingreso extends Model
         ];
     }
 
+    // Vehículo registrado
     public function vehiculo()
     {
         return $this->belongsTo(Vehiculo::class);
     }
 
+    // Mecánico asignado
     public function mecanico()
     {
         return $this->belongsTo(User::class, 'mecanico_id');
     }
 
-    public function diagnosticos()
+    // Diagnóstico del ingreso
+    public function diagnostico()
     {
-        return $this->hasMany(Diagnostico::class);
+        return $this->hasOne(Diagnostico::class);
     }
 }

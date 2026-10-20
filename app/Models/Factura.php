@@ -17,12 +17,16 @@ class Factura extends Model
     protected function casts(): array
     {
         return [
+            'total' => 'decimal:2',
             'fecha_emision' => 'date',
         ];
     }
 
     public function reparacion()
     {
-        return $this->belongsTo(Reparacion::class);
+        return $this->belongsTo(
+            Reparacion::class,
+            'reparacion_id'
+        );
     }
 }
