@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\VehiculosController;
 
 
 // Página principal
@@ -57,6 +58,7 @@ Route::middleware('auth')->group(function () {
         ->except(['show']);
     });
 
+    //Roles
     Route::middleware('role:administrador,recepcion')
     ->group(function () {
 
@@ -64,4 +66,13 @@ Route::middleware('auth')->group(function () {
             ->except(['show', 'destroy']);
 
     });
+
+//vehiculos
+      Route::middleware('role:administrador,recepcion')
+        ->group(function () {
+
+            Route::resource('vehiculos', VehiculoController::class)
+                ->except(['show', 'destroy']);
+
+        });
 });

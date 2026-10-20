@@ -92,10 +92,15 @@
                         Gestionar usuarios
                     </a>
 
-                    <a href="{{ route('clientes.index') }}"
+                        <a href="{{ route('clientes.index') }}"
                          class="btn btn-primary">
-                        Gestionar clientes
-                    </a>
+                         Gestionar clientes
+                        </a>
+
+                        <a href="{{ route('vehiculos.index') }}"
+                         class="btn btn-primary">
+                         Gestionar vehículos
+                        </a>
                 </div>
             </div>
         </div>
