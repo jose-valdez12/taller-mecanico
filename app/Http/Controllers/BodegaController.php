@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class BodegaController extends Controller
 {
+    // Listar solicitudes de repuestos
     public function index()
     {
         $solicitudes = SolicitudRepuesto::with([
@@ -23,9 +24,11 @@ class BodegaController extends Controller
         return view('bodega.index', compact('solicitudes'));
     }
 
-    // Autorizar o rechazar solicitud
-    public function resolver(Request $request, SolicitudRepuesto $solicitud)
-    {
+    // Aprobar o rechazar una solicitud
+    public function resolver(
+        Request $request,
+        SolicitudRepuesto $solicitud
+    ) {
         $datos = $request->validate([
             'accion' => 'required|in:aprobar,rechazar',
         ]);
@@ -43,12 +46,31 @@ class BodegaController extends Controller
             }
 
             if ($datos['accion'] === 'rechazar') {
-                $solicitud->update(['estado' => 'rechazada']);
+                $solicitud->update([
+                    'estado' => 'rechazada'
+                ]);
+
                 return;
             }
 
-            // Validación definitiva en el backend
-            foreach ($solicitud->detalles as $detalle) {
+            // Verificar las cantidades solicitadas
+            $detalles = $solicitud->detalles()
+                ->orderBy('repuesto_id')
+                ->get();
+
+            if ($detalles->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'solicitud' => 'La solicitud no contiene repuestos.'
+                ]);
+            }
+
+            foreach ($detalles as $detalle) {
+
+                if ($detalle->cantidad < 1) {
+                    throw ValidationException::withMessages([
+                        'cantidad' => 'La cantidad solicitada no es válida.'
+                    ]);
+                }
 
                 $repuesto = Repuesto::whereKey($detalle->repuesto_id)
                     ->lockForUpdate()
@@ -62,14 +84,17 @@ class BodegaController extends Controller
                 }
             }
 
-            $solicitud->update(['estado' => 'aprobada']);
+            // Aprobar solicitud
+            $solicitud->update([
+                'estado' => 'aprobada'
+            ]);
         });
 
         return redirect()->route('bodega.index')
             ->with('success', 'Solicitud procesada correctamente.');
     }
 
-    // Despachar y descontar existencias
+    // Despachar repuestos y descontar existencias
     public function despachar(SolicitudRepuesto $solicitud)
     {
         DB::transaction(function () use ($solicitud) {
@@ -85,31 +110,57 @@ class BodegaController extends Controller
                 ]);
             }
 
-            // Bloquear y verificar nuevamente el stock
+            // Obtener detalles en orden
             $detalles = $solicitud->detalles()
                 ->orderBy('repuesto_id')
                 ->get();
 
+            if ($detalles->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'solicitud' => 'La solicitud no contiene repuestos.'
+                ]);
+            }
+
             foreach ($detalles as $detalle) {
 
+                // Bloquear el repuesto durante la operación
                 $repuesto = Repuesto::whereKey($detalle->repuesto_id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($repuesto->stock < $detalle->cantidad) {
+                // Verificar nuevamente las existencias
+                if (
+                    $detalle->cantidad < 1 ||
+                    $repuesto->stock < $detalle->cantidad
+                ) {
                     throw ValidationException::withMessages([
                         'stock' =>
                             'Stock insuficiente para ' . $repuesto->nombre
                     ]);
                 }
 
-                $repuesto->decrement('stock', $detalle->cantidad);
+                // Guardar precio histórico del repuesto
+                $detalle->update([
+                    'precio_unitario' => $repuesto->precio
+                ]);
+
+                // Descontar las unidades del inventario
+                $repuesto->decrement(
+                    'stock',
+                    $detalle->cantidad
+                );
             }
 
-            $solicitud->update(['estado' => 'despachada']);
+            // Marcar la solicitud como despachada
+            $solicitud->update([
+                'estado' => 'despachada'
+            ]);
         });
 
         return redirect()->route('bodega.index')
-            ->with('success', 'Repuestos despachados correctamente.');
+            ->with(
+                'success',
+                'Repuestos despachados correctamente.'
+            );
     }
 }
