@@ -123,6 +123,10 @@
                         Registro de clientes, vehículos,
                         ingresos y salidas.
                     </p>
+                      <a href="{{ route('facturas.index') }}"
+                          class="btn btn-primary">
+                          Facturación
+                      </a>
                 </div>
             </div>
         </div>

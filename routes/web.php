@@ -11,7 +11,7 @@ use App\Http\Controllers\ReparacionesController;
 use App\Http\Controllers\SolicitudRepuestoController;
 use App\Http\Controllers\RepuestoController;
 use App\Http\Controllers\BodegaController;
-
+use App\Http\Controllers\FacturaController;
 
 // Página principal
 Route::get('/', function () {
@@ -173,5 +173,26 @@ Route::middleware('auth')->group(function () {
             Route::patch('/bodega/solicitudes/{solicitud}/despachar',
                 [BodegaController::class, 'despachar'])
                 ->name('bodega.despachar');
+        });
+
+        //Factura
+           Route::middleware('role:administrador,recepcion')
+        ->group(function () {
+
+            Route::get('/facturas',
+                [FacturaController::class, 'index'])
+                ->name('facturas.index');
+
+            Route::get('/facturas/create',
+                [FacturaController::class, 'create'])
+                ->name('facturas.create');
+
+            Route::post('/facturas',
+                [FacturaController::class, 'store'])
+                ->name('facturas.store');
+
+            Route::get('/facturas/{factura}',
+                [FacturaController::class, 'show'])
+                ->name('facturas.show');
         });
 });
