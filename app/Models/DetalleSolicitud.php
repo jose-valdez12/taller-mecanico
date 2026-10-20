@@ -11,8 +11,17 @@ class DetalleSolicitud extends Model
     protected $fillable = [
         'solicitud_repuesto_id',
         'repuesto_id',
-        'cantidad'
+        'cantidad',
+        'precio_unitario'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'cantidad' => 'integer',
+            'precio_unitario' => 'decimal:2',
+        ];
+    }
 
     public function solicitud()
     {
