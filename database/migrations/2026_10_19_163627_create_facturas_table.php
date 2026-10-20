@@ -11,10 +11,16 @@ return new class extends Migration
         Schema::create('facturas', function (Blueprint $table) {
             $table->id();
 
+            // Relación con reparación
+            // Evitar facturas duplicadas
             $table->foreignId('reparacion_id')
+                ->unique()
                 ->constrained('reparaciones');
 
+            // Total de la factura
             $table->decimal('total', 10, 2);
+
+            // Fecha de emisión
             $table->date('fecha_emision');
 
             $table->timestamps();
