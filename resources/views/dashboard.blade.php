@@ -140,6 +140,10 @@
                         Diagnósticos, reparaciones
                         y solicitudes de repuestos.
                     </p>
+                    <a href="{{ route('diagnosticos.index') }}"
+                         class="btn btn-primary">
+                        Gestionar Diagnósticos
+                    </a>
                 </div>
             </div>
         </div>

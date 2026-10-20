@@ -6,6 +6,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\VehiculosController;
 use App\Http\Controllers\IngresoController;
+use App\Http\Controllers\DiagnosticoController;
 
 
 // Página principal
@@ -91,5 +92,23 @@ Route::middleware('auth')->group(function () {
 
             Route::patch('/ingresos/{ingreso}/salida', [IngresoController::class, 'salida'])
                 ->name('ingresos.salida');
+        });
+
+        //Diagnostico administrador y mecanico.
+         Route::middleware('role:administrador,mecanico')
+        ->group(function () {
+
+            Route::get('/diagnosticos',
+                [DiagnosticoController::class, 'index'])
+                ->name('diagnosticos.index');
+
+            Route::get('/diagnosticos/create',
+                [DiagnosticoController::class, 'create'])
+                ->name('diagnosticos.create');
+
+            Route::post('/diagnosticos',
+                [DiagnosticoController::class, 'store'])
+                ->name('diagnosticos.store');
+
         });
 });
