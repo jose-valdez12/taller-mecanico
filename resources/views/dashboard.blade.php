@@ -100,9 +100,9 @@
                         <a href="{{ route('vehiculos.index') }}"
                          class="btn btn-primary">
                          Gestionar vehículos
-                        </a>
+                        </a><br>
 
-                        <a href="{{ route('ingresos.index') }}"
+                       <br> <a href="{{ route('ingresos.index') }}"
                            class="btn btn-primary">
                            Ingresos y Salidas
                         </a>
