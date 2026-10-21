@@ -38,6 +38,7 @@ class ReparacionController extends Controller
     {
         $consulta = Diagnostico::with('ingreso.vehiculo')
             ->whereHas('ingreso', function ($query) {
+
                 $query->whereNull('fecha_salida')
                     ->where('estado', 'en_diagnostico');
 
@@ -45,9 +46,11 @@ class ReparacionController extends Controller
                     $query->where('mecanico_id', auth()->id());
                 }
             })
-            ->whereDoesntHave('reparaciones');
+            ->whereDoesntHave('reparacion');
 
-        $diagnosticos = $consulta->orderBy('id', 'desc')->get();
+        $diagnosticos = $consulta
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view('reparaciones.create', compact('diagnosticos'));
     }
@@ -62,19 +65,24 @@ class ReparacionController extends Controller
         ]);
 
         DB::transaction(function () use ($datos) {
-            $diagnostico = Diagnostico::findOrFail($datos['diagnostico_id']);
+
+            $diagnostico = Diagnostico::findOrFail(
+                $datos['diagnostico_id']
+            );
 
             $ingreso = Ingreso::whereKey($diagnostico->ingreso_id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            // Comprobar mecánico responsable
             if (
                 auth()->user()->rol === 'mecanico' &&
-                $ingreso->mecanico_id !== auth()->id()
+                (int) $ingreso->mecanico_id !== (int) auth()->id()
             ) {
                 abort(403, 'Este trabajo no está asignado a tu usuario.');
             }
 
+            // Comprobar disponibilidad del ingreso
             if (
                 $ingreso->fecha_salida !== null ||
                 $ingreso->estado !== 'en_diagnostico'
@@ -85,13 +93,15 @@ class ReparacionController extends Controller
                 ]);
             }
 
-            if ($diagnostico->reparaciones()->exists()) {
+            // Evitar dos reparaciones para un diagnóstico
+            if ($diagnostico->reparacion()->exists()) {
                 throw ValidationException::withMessages([
                     'diagnostico_id' =>
                         'Este diagnóstico ya tiene una reparación registrada.'
                 ]);
             }
 
+            // Registrar reparación
             Reparacion::create([
                 'diagnostico_id' => $diagnostico->id,
                 'descripcion' => $datos['descripcion'],
@@ -99,6 +109,7 @@ class ReparacionController extends Controller
                 'estado' => 'pendiente'
             ]);
 
+            // Actualizar estado del ingreso
             $ingreso->update([
                 'estado' => 'en_reparacion'
             ]);
@@ -109,8 +120,10 @@ class ReparacionController extends Controller
     }
 
     // Actualizar estado de la reparación
-    public function actualizarEstado(Request $request, Reparacion $reparacion)
-    {
+    public function actualizarEstado(
+        Request $request,
+        Reparacion $reparacion
+    ) {
         $datos = $request->validate([
             'estado' => [
                 'required',
@@ -119,6 +132,7 @@ class ReparacionController extends Controller
         ]);
 
         DB::transaction(function () use ($reparacion, $datos) {
+
             $ingresoId = $reparacion->diagnostico->ingreso_id;
 
             $ingreso = Ingreso::whereKey($ingresoId)
@@ -129,13 +143,15 @@ class ReparacionController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            // Comprobar permisos del mecánico
             if (
                 auth()->user()->rol === 'mecanico' &&
-                $ingreso->mecanico_id !== auth()->id()
+                (int) $ingreso->mecanico_id !== (int) auth()->id()
             ) {
                 abort(403, 'No tienes permiso para modificar este trabajo.');
             }
 
+            // Comprobar estado actual
             if (
                 $ingreso->fecha_salida !== null ||
                 $ingreso->estado !== 'en_reparacion' ||
@@ -146,6 +162,7 @@ class ReparacionController extends Controller
                 ]);
             }
 
+            // Iniciar reparación
             if (
                 $reparacion->estado === 'pendiente' &&
                 $datos['estado'] !== 'en_proceso'
@@ -156,44 +173,63 @@ class ReparacionController extends Controller
                 ]);
             }
 
+            // Finalizar reparación
             if (
                 $reparacion->estado === 'en_proceso' &&
                 $datos['estado'] !== 'finalizada'
             ) {
                 throw ValidationException::withMessages([
-                    'estado' => 'La transición de estado no es válida.'
+                    'estado' =>
+                        'La transición de estado no es válida.'
                 ]);
             }
 
             if ($datos['estado'] === 'finalizada') {
-                // No finalizar con solicitudes sin resolver.
-                if ($reparacion->solicitudes()
-                    ->whereIn('estado', ['pendiente', 'aprobada'])
-                    ->exists()) {
+
+                // Verificar solicitudes pendientes
+                if (
+                    $reparacion->solicitudes()
+                        ->whereIn('estado', [
+                            'pendiente',
+                            'aprobada'
+                        ])
+                        ->exists()
+                ) {
                     throw ValidationException::withMessages([
                         'estado' =>
                             'Existen solicitudes de repuestos pendientes de despacho.'
                     ]);
                 }
 
-                // No finalizar si faltan reparaciones del mismo ingreso.
+                // Comprobar otras reparaciones pendientes
                 $otrasPendientes = Reparacion::whereHas(
                     'diagnostico',
                     function ($query) use ($ingreso) {
-                        $query->where('ingreso_id', $ingreso->id);
+                        $query->where(
+                            'ingreso_id',
+                            $ingreso->id
+                        );
                     }
                 )
                 ->where('id', '!=', $reparacion->id)
                 ->where('estado', '!=', 'finalizada')
                 ->exists();
 
-                $reparacion->update(['estado' => 'finalizada']);
+                $reparacion->update([
+                    'estado' => 'finalizada'
+                ]);
 
                 if (!$otrasPendientes) {
-                    $ingreso->update(['estado' => 'finalizado']);
+                    $ingreso->update([
+                        'estado' => 'finalizado'
+                    ]);
                 }
+
             } else {
-                $reparacion->update(['estado' => 'en_proceso']);
+
+                $reparacion->update([
+                    'estado' => 'en_proceso'
+                ]);
             }
         });
 
