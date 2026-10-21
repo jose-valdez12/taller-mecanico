@@ -32,7 +32,7 @@ class DiagnosticoController extends Controller
         return view('diagnosticos.index', compact('diagnosticos'));
     }
 
-    // Formulario de diagnóstico
+    // Formulario para registrar diagnóstico
     public function create()
     {
         $consulta = Ingreso::with('vehiculo.cliente')
@@ -41,7 +41,7 @@ class DiagnosticoController extends Controller
                 'recibido',
                 'en_diagnostico'
             ])
-            ->whereDoesntHave('diagnosticos');
+            ->whereDoesntHave('diagnostico');
 
         if (auth()->user()->rol === 'mecanico') {
             $consulta->where('mecanico_id', auth()->id());
@@ -72,7 +72,7 @@ class DiagnosticoController extends Controller
             // Comprobar mecánico responsable
             if (
                 auth()->user()->rol === 'mecanico' &&
-                $ingreso->mecanico_id !== auth()->id()
+                (int) $ingreso->mecanico_id !== (int) auth()->id()
             ) {
                 abort(403, 'Este vehículo no está asignado a tu usuario.');
             }
@@ -83,7 +83,7 @@ class DiagnosticoController extends Controller
                 !in_array($ingreso->estado, [
                     'recibido',
                     'en_diagnostico'
-                ])
+                ], true)
             ) {
                 throw ValidationException::withMessages([
                     'ingreso_id' =>
@@ -91,14 +91,15 @@ class DiagnosticoController extends Controller
                 ]);
             }
 
-            // Evitar registrar dos diagnósticos del mismo ingreso
-            if ($ingreso->diagnosticos()->exists()) {
+            // Evitar duplicar diagnósticos
+            if ($ingreso->diagnostico()->exists()) {
                 throw ValidationException::withMessages([
                     'ingreso_id' =>
                         'Este ingreso ya tiene un diagnóstico registrado.'
                 ]);
             }
 
+            // Registrar diagnóstico
             Diagnostico::create($datos);
 
             // Actualizar estado del ingreso
